@@ -31,14 +31,14 @@
     Constructor
 */
 /**************************************************************************/
-Adafruit_FRAM_SPI::Adafruit_FRAM_SPI(int8_t cs) 
+Adafruit_FRAM_SPI::Adafruit_FRAM_SPI(int8_t cs)
 {
   _cs = cs;
   _clk = _mosi = _miso = -1;
   _framInitialised = false;
 }
 
-Adafruit_FRAM_SPI::Adafruit_FRAM_SPI(int8_t clk, int8_t miso, int8_t mosi, int8_t cs) 
+Adafruit_FRAM_SPI::Adafruit_FRAM_SPI(int8_t clk, int8_t miso, int8_t mosi, int8_t cs)
 {
   _cs = cs; _clk = clk; _mosi = mosi; _miso = miso;
   _framInitialised = false;
@@ -54,7 +54,7 @@ Adafruit_FRAM_SPI::Adafruit_FRAM_SPI(int8_t clk, int8_t miso, int8_t mosi, int8_
     doing anything else)
 */
 /**************************************************************************/
-boolean Adafruit_FRAM_SPI::begin(void) 
+boolean Adafruit_FRAM_SPI::begin(void)
 {
   /* Configure SPI */
   pinMode(_cs, OUTPUT);
@@ -62,13 +62,13 @@ boolean Adafruit_FRAM_SPI::begin(void)
 
   if (_clk == -1) { // hardware SPI!
     SPI.begin();
-      
+
 #ifdef __SAM3X8E__
     SPI.setClockDivider (9); // 9.3 MHz
 #else
     SPI.setClockDivider (SPI_CLOCK_DIV2); // 8 MHz
 #endif
-      
+
     SPI.setDataMode(SPI_MODE0);
   } else {
     pinMode(_clk, OUTPUT);
@@ -80,16 +80,16 @@ boolean Adafruit_FRAM_SPI::begin(void)
   uint8_t manufID;
   uint16_t prodID;
   getDeviceID(&manufID, &prodID);
-  if (manufID != 0x04)
+/*  if (manufID != 0x04)
   {
     //Serial.print("Unexpected Manufacturer ID: 0x"); Serial.println(manufID, HEX);
     return false;
   }
-  if (prodID != 0x0302)
+  if (prodID != 0x2803)
   {
     //Serial.print("Unexpected Product ID: 0x"); Serial.println(prodID, HEX);
     return false;
-  }
+  } */
 
   /* Everything seems to be properly initialised and connected */
   _framInitialised = true;
@@ -100,7 +100,7 @@ boolean Adafruit_FRAM_SPI::begin(void)
 /**************************************************************************/
 /*!
     @brief  Enables or disables writing to the SPI flash
-    
+
     @params[in] enable
                 True enables writes, false disables writes
 */
@@ -122,18 +122,19 @@ void Adafruit_FRAM_SPI::writeEnable (bool enable)
 /**************************************************************************/
 /*!
     @brief  Writes a byte at the specific FRAM address
-    
+
     @params[in] addr
                 The 16-bit address to write to in FRAM memory
     @params[in] i2cAddr
                 The 8-bit value to write at framAddr
 */
 /**************************************************************************/
-void Adafruit_FRAM_SPI::write8 (uint16_t addr, uint8_t value)
+void Adafruit_FRAM_SPI::write8 (unsigned long addr, uint8_t value)
 {
   digitalWrite(_cs, LOW);
   SPItransfer(OPCODE_WRITE);
-  SPItransfer((uint8_t)(addr >> 8));
+  SPItransfer((uint8_t)(addr >> 16));
+  SPItransfer((uint8_t)((addr & 0xFF00) >> 8));
   SPItransfer((uint8_t)(addr & 0xFF));
   SPItransfer(value);
   /* CS on the rising edge commits the WRITE */
@@ -143,7 +144,7 @@ void Adafruit_FRAM_SPI::write8 (uint16_t addr, uint8_t value)
 /**************************************************************************/
 /*!
     @brief  Writes count bytes starting at the specific FRAM address
-    
+
     @params[in] addr
                 The 16-bit address to write to in FRAM memory
     @params[in] values
@@ -152,11 +153,12 @@ void Adafruit_FRAM_SPI::write8 (uint16_t addr, uint8_t value)
                 The number of bytes to write
 */
 /**************************************************************************/
-void Adafruit_FRAM_SPI::write (uint16_t addr, const uint8_t *values, size_t count)
+void Adafruit_FRAM_SPI::write (unsigned long addr, const uint8_t *values, size_t count)
 {
   digitalWrite(_cs, LOW);
   SPItransfer(OPCODE_WRITE);
-  SPItransfer((uint8_t)(addr >> 8));
+  SPItransfer((uint8_t)(addr >> 16));
+  SPItransfer((uint8_t)((addr & 0xFF00) >> 8));
   SPItransfer((uint8_t)(addr & 0xFF));
   for (int i = 0; i < count; i++)
   {
@@ -176,11 +178,12 @@ void Adafruit_FRAM_SPI::write (uint16_t addr, const uint8_t *values, size_t coun
     @returns    The 8-bit value retrieved at framAddr
 */
 /**************************************************************************/
-uint8_t Adafruit_FRAM_SPI::read8 (uint16_t addr)
+uint8_t Adafruit_FRAM_SPI::read8 (unsigned long addr)
 {
   digitalWrite(_cs, LOW);
   SPItransfer(OPCODE_READ);
-  SPItransfer((uint8_t)(addr >> 8));
+  SPItransfer((uint8_t)(addr >> 16));
+  SPItransfer((uint8_t)((addr & 0xFF00) >> 8));
   SPItransfer((uint8_t)(addr & 0xFF));
   uint8_t x = SPItransfer(0);
   digitalWrite(_cs, HIGH);
@@ -211,7 +214,7 @@ void Adafruit_FRAM_SPI::getDeviceID(uint8_t *manufacturerID, uint16_t *productID
   a[2] = SPItransfer(0);
   a[3] = SPItransfer(0);
   digitalWrite(_cs, HIGH);
-  
+
   /* Shift values to separate manuf and prod IDs */
   /* See p.10 of http://www.fujitsu.com/downloads/MICRO/fsa/pdf/products/memory/fram/MB85RS64V-DS501-00015-4v0-E.pdf */
   *manufacturerID = (a[0]);
@@ -257,7 +260,7 @@ uint8_t Adafruit_FRAM_SPI::SPItransfer(uint8_t x) {
       digitalWrite(_clk, LOW);
       digitalWrite(_mosi, x & (1<<i));
       digitalWrite(_clk, HIGH);
-      if (digitalRead(_miso)) 
+      if (digitalRead(_miso))
 	reply |= 1;
     }
     return reply;

@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*! 
+/*!
     @file     Adafruit_FRAM_SPI.h
     @author   KTOWN (Adafruit Industries)
 
@@ -62,9 +62,9 @@ class Adafruit_FRAM_SPI {
 
   boolean  begin  (void);
   void     writeEnable (bool enable);
-  void     write8 (uint16_t addr, uint8_t value);
-  void     write (uint16_t addr, const uint8_t *values, size_t count);
-  uint8_t  read8  (uint16_t addr);
+  void     write8 (unsigned long addr, uint8_t value);
+  void     write (unsigned long addr, const uint8_t *values, size_t count);
+  uint8_t  read8  (unsigned long addr);
   void     getDeviceID(uint8_t *manufacturerID, uint16_t *productID);
   uint8_t  getStatusRegister(void);
   void     setStatusRegister(uint8_t value);
