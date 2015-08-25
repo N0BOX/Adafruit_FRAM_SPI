@@ -133,9 +133,9 @@ void Adafruit_FRAM_SPI::write8 (unsigned long addr, uint8_t value)
 {
   digitalWrite(_cs, LOW);
   SPItransfer(OPCODE_WRITE);
-  SPItransfer((uint8_t)(addr >> 16));
-  SPItransfer((uint8_t)((addr & 0xFF00) >> 8));
-  SPItransfer((uint8_t)(addr & 0xFF));
+  SPItransfer((uint8_t)((addr & 0x00FF0000) >> 16));
+  SPItransfer((uint8_t)((addr & 0x0000FF00) >> 8));
+  SPItransfer((uint8_t)(addr & 0x000000FF));
   SPItransfer(value);
   /* CS on the rising edge commits the WRITE */
   digitalWrite(_cs, HIGH);
@@ -157,9 +157,9 @@ void Adafruit_FRAM_SPI::write (unsigned long addr, const uint8_t *values, size_t
 {
   digitalWrite(_cs, LOW);
   SPItransfer(OPCODE_WRITE);
-  SPItransfer((uint8_t)(addr >> 16));
-  SPItransfer((uint8_t)((addr & 0xFF00) >> 8));
-  SPItransfer((uint8_t)(addr & 0xFF));
+  SPItransfer((uint8_t)((addr & 0x00FF0000) >> 16));
+  SPItransfer((uint8_t)((addr & 0x0000FF00) >> 8));
+  SPItransfer((uint8_t)(addr & 0x000000FF));
   for (int i = 0; i < count; i++)
   {
     SPItransfer(values[i]);
@@ -182,9 +182,9 @@ uint8_t Adafruit_FRAM_SPI::read8 (unsigned long addr)
 {
   digitalWrite(_cs, LOW);
   SPItransfer(OPCODE_READ);
-  SPItransfer((uint8_t)(addr >> 16));
-  SPItransfer((uint8_t)((addr & 0xFF00) >> 8));
-  SPItransfer((uint8_t)(addr & 0xFF));
+  SPItransfer((uint8_t)((addr & 0x00FF0000) >> 16));
+  SPItransfer((uint8_t)((addr & 0x0000FF00) >> 8));
+  SPItransfer((uint8_t)(addr & 0x000000FF));
   uint8_t x = SPItransfer(0);
   digitalWrite(_cs, HIGH);
   return x;
